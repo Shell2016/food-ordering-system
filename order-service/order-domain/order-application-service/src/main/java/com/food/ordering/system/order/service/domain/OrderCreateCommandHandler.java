@@ -25,6 +25,7 @@ public class OrderCreateCommandHandler {
     private final CustomerRepository customerRepository;
     private final RestaurantRepository restaurantRepository;
     private final OrderDataMapper orderDataMapper;
+    private final ApplicationDomainEventPublisher publisher;
 
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderCommand createOrderCommand) {
@@ -34,6 +35,7 @@ public class OrderCreateCommandHandler {
         OrderCreatedEvent orderCreatedEvent = orderDomainService.validateAndInitiateOrder(order, restaurant);
         Order savedOrder = saveOrder(order);
         log.info("Created order with id {}", savedOrder.getId().getValue());
+        publisher.publish(orderCreatedEvent);
         return orderDataMapper.orderToCreateOrderResponse(savedOrder);
     }
 
