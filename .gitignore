@@ -37,3 +37,5 @@ build/
 
 ### Mac OS ###
 .DS_Store
+**/.env
+/infrastructure/docker-compose/volumes/**
