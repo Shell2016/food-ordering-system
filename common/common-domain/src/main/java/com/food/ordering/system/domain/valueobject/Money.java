@@ -27,7 +27,7 @@ public class Money {
         return new Money(setScale(this.amount.multiply(new BigDecimal(multiplier))));
     }
 
-    public Money substruct(Money money) {
+    public Money subtruct(Money money) {
         return new Money(setScale(this.amount.subtract(money.getAmount())));
     }
 
