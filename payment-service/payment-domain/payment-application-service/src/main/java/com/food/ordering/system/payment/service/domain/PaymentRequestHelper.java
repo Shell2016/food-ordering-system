@@ -7,6 +7,7 @@ import com.food.ordering.system.payment.service.domain.entity.*;
 import com.food.ordering.system.payment.service.domain.event.PaymentEvent;
 import com.food.ordering.system.payment.service.domain.exception.PaymentApplicationPaymentException;
 import com.food.ordering.system.payment.service.domain.mapper.PaymentDataMapper;
+import com.food.ordering.system.payment.service.domain.ports.output.message.publisher.*;
 import com.food.ordering.system.payment.service.domain.ports.output.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,9 @@ public class PaymentRequestHelper {
     private final PaymentRepository paymentRepository;
     private final CreditEntryRepository creditEntryRepository;
     private final CreditHistoryRepository creditHistoryRepository;
+    private final PaymentCompletedMessagePublisher paymentCompletedMessagePublisher;
+    private final PaymentFailedMessagePublisher paymentFailedMessagePublisher;
+    private final PaymentCancelledMessagePublisher paymentCancelledMessagePublisher;
 
     @Transactional
     public PaymentEvent persistPayment(PaymentRequest paymentRequest) {
@@ -58,8 +62,10 @@ public class PaymentRequestHelper {
                                                    List<CreditHistory> creditHistories,
                                                    List<String> failureMessages) {
         return payment.getPaymentStatus() == PaymentStatus.CANCELLED
-                ? paymentDomainService.validateAndCancelPayment(payment, creditEntry, creditHistories, failureMessages)
-                : paymentDomainService.validateAndInitiatePayment(payment, creditEntry, creditHistories, failureMessages);
+                ? paymentDomainService.validateAndCancelPayment(payment, creditEntry, creditHistories, failureMessages,
+                paymentCancelledMessagePublisher, paymentFailedMessagePublisher)
+                : paymentDomainService.validateAndInitiatePayment(payment, creditEntry, creditHistories, failureMessages,
+                paymentCompletedMessagePublisher, paymentFailedMessagePublisher);
     }
 
     private List<CreditHistory> getCreditHistory(CustomerId customerId) {
