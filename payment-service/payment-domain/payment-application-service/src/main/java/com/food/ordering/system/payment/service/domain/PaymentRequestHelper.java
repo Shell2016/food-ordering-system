@@ -9,7 +9,9 @@ import com.food.ordering.system.payment.service.domain.exception.PaymentApplicat
 import com.food.ordering.system.payment.service.domain.mapper.PaymentDataMapper;
 import com.food.ordering.system.payment.service.domain.ports.output.message.publisher.*;
 import com.food.ordering.system.payment.service.domain.ports.output.repository.*;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,15 +21,17 @@ import java.util.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentRequestHelper {
-    private final PaymentDomainService paymentDomainService;
-    private final PaymentDataMapper paymentDataMapper;
-    private final PaymentRepository paymentRepository;
-    private final CreditEntryRepository creditEntryRepository;
-    private final CreditHistoryRepository creditHistoryRepository;
-    private final PaymentCompletedMessagePublisher paymentCompletedMessagePublisher;
-    private final PaymentFailedMessagePublisher paymentFailedMessagePublisher;
-    private final PaymentCancelledMessagePublisher paymentCancelledMessagePublisher;
+
+    PaymentDomainService paymentDomainService;
+    PaymentDataMapper paymentDataMapper;
+    PaymentRepository paymentRepository;
+    CreditEntryRepository creditEntryRepository;
+    CreditHistoryRepository creditHistoryRepository;
+    PaymentCompletedMessagePublisher paymentCompletedMessagePublisher;
+    PaymentFailedMessagePublisher paymentFailedMessagePublisher;
+    PaymentCancelledMessagePublisher paymentCancelledMessagePublisher;
 
     @Transactional
     public PaymentEvent persistPayment(PaymentRequest paymentRequest) {
@@ -57,15 +61,12 @@ public class PaymentRequestHelper {
         return paymentEvent;
     }
 
-    private PaymentEvent validateAndProcessPayment(Payment payment,
-                                                   CreditEntry creditEntry,
-                                                   List<CreditHistory> creditHistories,
-                                                   List<String> failureMessages) {
-        return payment.getPaymentStatus() == PaymentStatus.CANCELLED
-                ? paymentDomainService.validateAndCancelPayment(payment, creditEntry, creditHistories, failureMessages,
-                paymentCancelledMessagePublisher, paymentFailedMessagePublisher)
-                : paymentDomainService.validateAndInitiatePayment(payment, creditEntry, creditHistories, failureMessages,
-                paymentCompletedMessagePublisher, paymentFailedMessagePublisher);
+    private CreditEntry getCreditEntry(CustomerId customerId) {
+        return creditEntryRepository.findByCustomerId(customerId).orElseThrow(() -> {
+            log.error("Could not find credit entry for customer: {}", customerId.getValue());
+            return new PaymentApplicationPaymentException("Could not find credit entry for customer: " +
+                                                          customerId.getValue());
+        });
     }
 
     private List<CreditHistory> getCreditHistory(CustomerId customerId) {
@@ -76,12 +77,27 @@ public class PaymentRequestHelper {
         });
     }
 
-    private CreditEntry getCreditEntry(CustomerId customerId) {
-        return creditEntryRepository.findByCustomerId(customerId).orElseThrow(() -> {
-            log.error("Could not find credit entry for customer: {}", customerId.getValue());
-            return new PaymentApplicationPaymentException("Could not find credit entry for customer: " +
-                                                          customerId.getValue());
-        });
+    private PaymentEvent validateAndProcessPayment(Payment payment,
+                                                   CreditEntry creditEntry,
+                                                   List<CreditHistory> creditHistories,
+                                                   List<String> failureMessages) {
+        if (payment.getPaymentStatus() == PaymentStatus.CANCELLED) {
+            return paymentDomainService.validateAndCancelPayment(
+                    payment,
+                    creditEntry,
+                    creditHistories,
+                    failureMessages,
+                    paymentCancelledMessagePublisher,
+                    paymentFailedMessagePublisher);
+        } else {
+            return paymentDomainService.validateAndInitiatePayment(
+                    payment,
+                    creditEntry,
+                    creditHistories,
+                    failureMessages,
+                    paymentCompletedMessagePublisher,
+                    paymentFailedMessagePublisher);
+        }
     }
 
     private void persistDbObjects(Payment payment,
