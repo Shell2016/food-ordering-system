@@ -9,16 +9,16 @@ import lombok.Getter;
 public class OrderApproval extends BaseEntity<OrderApprovalId> {
     private final RestaurantId restaurantId;
     private final OrderId orderId;
-    private final OrderApprovalStatus orderApprovalStatus;
+    private final OrderApprovalStatus approvalStatus;
 
     private OrderApproval(OrderApprovalId orderApprovalId,
                           RestaurantId restaurantId,
                           OrderId orderId,
-                          OrderApprovalStatus orderApprovalStatus) {
+                          OrderApprovalStatus approvalStatus) {
         super.setId(orderApprovalId);
         this.restaurantId = restaurantId;
         this.orderId = orderId;
-        this.orderApprovalStatus = orderApprovalStatus;
+        this.approvalStatus = approvalStatus;
     }
 
     public static OrderApprovalBuilder builder() {
@@ -29,7 +29,7 @@ public class OrderApproval extends BaseEntity<OrderApprovalId> {
         private OrderApprovalId orderApprovalId;
         private RestaurantId restaurantId;
         private OrderId orderId;
-        private OrderApprovalStatus orderApprovalStatus;
+        private OrderApprovalStatus approvalStatus;
 
         OrderApprovalBuilder() {
         }
@@ -49,17 +49,17 @@ public class OrderApproval extends BaseEntity<OrderApprovalId> {
             return this;
         }
 
-        public OrderApprovalBuilder orderApprovalStatus(OrderApprovalStatus orderApprovalStatus) {
-            this.orderApprovalStatus = orderApprovalStatus;
+        public OrderApprovalBuilder approvalStatus(OrderApprovalStatus approvalStatus) {
+            this.approvalStatus = approvalStatus;
             return this;
         }
 
         public OrderApproval build() {
-            return new OrderApproval(this.orderApprovalId, this.restaurantId, this.orderId, this.orderApprovalStatus);
+            return new OrderApproval(this.orderApprovalId, this.restaurantId, this.orderId, this.approvalStatus);
         }
 
         public String toString() {
-            return "OrderApproval.OrderApprovalBuilder(restaurantId=" + this.restaurantId + ", orderId=" + this.orderId + ", orderApprovalStatus=" + this.orderApprovalStatus + ")";
+            return "OrderApproval.OrderApprovalBuilder(restaurantId=" + this.restaurantId + ", orderId=" + this.orderId + ", orderApprovalStatus=" + this.approvalStatus + ")";
         }
     }
 }
