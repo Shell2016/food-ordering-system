@@ -36,7 +36,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <image>${project.groupId}/payment.service:${project.version}</image>
+                    <image>
+                        <name>${project.groupId}/payment.service:${project.version}</name>
+                    </image>
                 </configuration>
                 <executions>
                     <execution>
